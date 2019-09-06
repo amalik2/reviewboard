@@ -198,6 +198,8 @@ suite('rb/models/ReviewRequestEditor', function() {
                             },
                         }));
 
+                    spyOn(editor, 'trigger');
+
                     editor.setDraftField('summary', 'My Summary', _.defaults({
                         jsonFieldName: 'summary',
                     }, callbacks));
@@ -206,6 +208,7 @@ suite('rb/models/ReviewRequestEditor', function() {
                     expect(editor.get('publishing')).toBe(false);
                     expect(editor.get('pendingSaveCount')).toBe(1);
                     expect(editor.publishDraft).not.toHaveBeenCalled();
+                    expect(editor.trigger).toHaveBeenCalledWith("saveError", editor);
                 });
             });
 

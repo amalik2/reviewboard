@@ -112,6 +112,10 @@ const BannerView = Backbone.View.extend({
             () => this.$buttons.prop('disabled', true));
 
         this.reviewRequestEditor.on(
+            'saveError',
+            () => this.$buttons.prop("disabled", false));
+
+        this.reviewRequestEditor.on(
             'saved saveFailed destroyed',
             () => this.$buttons.prop('disabled', false));
 

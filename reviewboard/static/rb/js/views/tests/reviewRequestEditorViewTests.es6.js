@@ -491,6 +491,14 @@ suite('rb/views/ReviewRequestEditorView', function() {
                     editor.trigger('saved');
                     expect($buttons.prop('disabled')).toBe(false);
                 });
+
+                it('Enabled after failing to save', function() {
+                    expect($buttons.prop('disabled')).toBe(false);
+                    editor.trigger('saving');
+                    expect($buttons.prop('disabled')).toBe(true);
+                    editor.trigger('saveError');
+                    expect($buttons.prop('disabled')).toBe(false);
+                });
             });
         });
 

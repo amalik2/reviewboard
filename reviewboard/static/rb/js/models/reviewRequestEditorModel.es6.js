@@ -385,6 +385,8 @@ RB.ReviewRequestEditor = Backbone.Model.extend({
                     options.error.call(context, {
                         errorText: message
                     });
+
+                    this.trigger("saveError", this);
                 }
             },
             success: () => {

@@ -128,6 +128,21 @@ RB.AbstractReviewableView = Backbone.View.extend({
     },
 
     /**
+     * Gets whether the specified comment block should be rendered or not.
+     * 
+     * Args:
+     *     commentBlock (RB.AbstractCommentBlock):
+     *         The comment block to check the status of.
+     * 
+     * Returns:
+     *     boolean:
+     *     Whether the comment block should be rendered or not.
+     */
+    shouldRenderCommentBlock(commentBlock) {
+        return true;
+    },
+
+    /**
      * Add a CommentBlockView for the given CommentBlock.
      *
      * This will create a view for the block, render it, listen for clicks
@@ -139,6 +154,10 @@ RB.AbstractReviewableView = Backbone.View.extend({
      *         The comment block to add a view for.
      */
     _addCommentBlockView(commentBlock) {
+        if (!this.shouldRenderCommentBlock(commentBlock)) {
+            return;
+        }
+
         const commentBlockView = new this.commentBlockView({
             model: commentBlock
         });

@@ -135,7 +135,7 @@
   }
 }
 
-#attachment_revision_selector, #revision_label {
+#attachment_revision_selector, #revision_label, #render_options {
   padding-top: 4px;
   padding-left: 12px;
 }
@@ -165,5 +165,16 @@
     ul, ol {
       padding-left: 2em;
     }
+  }
+}
+
+/****************************************************************************
+ * XML-specific styles
+ ****************************************************************************/
+.xml-review-ui {
+  // this is a workaround for extra whitespace being added to the first line
+  // while in the file differ view (but not in the normal view)
+  tr[line='1'] > td > pre:first-of-type {
+    white-space: unset;
   }
 }

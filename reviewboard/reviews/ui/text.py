@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import logging
 
-from django.utils.encoding import force_bytes
 from django.utils.safestring import mark_safe
 from djblets.cache.backend import cache_memoize
 from djblets.util.compat.django.template.loader import render_to_string
@@ -32,6 +31,7 @@ class TextBasedReviewUI(FileAttachmentReviewUI):
     template_name = 'reviews/ui/text.html'
     comment_thumbnail_template_name = 'reviews/ui/text_comment_thumbnail.html'
     can_render_text = False
+    has_render_options = False
     supports_diffing = True
 
     source_chunk_generator_cls = RawDiffChunkGenerator

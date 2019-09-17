@@ -184,12 +184,11 @@ def get_xml_declaration(raw_xml):
     """Gets the declaration tag associated with the specified xml contents.
     If no declaration tag is found, an empty string is returned.
     """
-    if not isinstance(raw_xml, str):
-        raw_xml = force_text(raw_xml)
+    raw_xml = force_text(raw_xml)
 
-    if raw_xml.startswith('<?xml'):
-        end_index = raw_xml.index('?>') + 2
-        return raw_xml[:end_index]
+    if raw_xml.find('<?xml') == 0:
+        end_index = raw_xml.find('?>') + 2
+        return force_text(raw_xml[:end_index], encoding='ascii')
     return ''
 
 

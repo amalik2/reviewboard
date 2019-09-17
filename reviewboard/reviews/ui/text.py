@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from django.utils.encoding import force_bytes
 from django.utils.safestring import mark_safe
 from djblets.cache.backend import cache_memoize
 from djblets.util.compat.django.template.loader import render_to_string

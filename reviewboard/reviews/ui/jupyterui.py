@@ -31,7 +31,6 @@ class CustomHTMLExporter(HTMLExporter):
 
 
 nb_exporter = CustomHTMLExporter()
-print(nb_exporter.default_config)
 
 def filter_generated_html(root):
     for anchor in root.xpath('//a[@class="anchor-link"]'):
@@ -59,16 +58,20 @@ def render_notebook_data(notebook):
     return elements
 
 
+# TODO: thumbnails
+# TODO: diff chunks
+# TODO: unit tests
 class JupyterReviewUI(TextBasedReviewUI):
     """A Review UI for Jupyter notebook files.
 
     This renders the notebook to HTML, and allows users to comment on each
     cell.
     """
-    # TODO: test this
     supported_mimetypes = ['application/ipynb+json']
     object_key = 'jupyter'
     can_render_text = True
+    # TODO: fix this
+    #rendered_chunk_generator_cls = MarkdownDiffChunkGenerator
 
     extra_css_classes = ['jupyter-review-ui']
 

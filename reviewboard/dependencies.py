@@ -106,6 +106,8 @@ package_dependencies = {
     'python-memcached': '',
     'pytz': '>=2015.2',
     'Whoosh': '>=2.6',
+    'nbconvert': '>=5.6.0',
+    'lxml': '>=4.4.1',
 }
 
 #: Dependencies only specified during the packaging process.

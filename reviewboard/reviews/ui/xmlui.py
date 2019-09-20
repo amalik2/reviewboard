@@ -325,7 +325,6 @@ class XMLReviewUI(TextBasedReviewUI):
     supported_mimetypes = ['application/xml', 'text/xml']
     object_key = 'xml'
     can_render_text = True
-    has_render_options = True
 
     extra_css_classes = ['xml-review-ui']
 

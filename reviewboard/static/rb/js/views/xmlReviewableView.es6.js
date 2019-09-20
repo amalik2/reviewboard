@@ -25,6 +25,7 @@ RB.XMLReviewableView = RB.TextBasedReviewableView.extend({
     remove() {
         _super(this).remove.call(this);
 
+        $.remove(this._$renderOptions);
         this._renderOptionsView.remove();
     },
 
@@ -34,7 +35,10 @@ RB.XMLReviewableView = RB.TextBasedReviewableView.extend({
     renderContent() {
         RB.TextBasedReviewableView.prototype.renderContent.call(this);
 
-        this._$renderOptions = this.$('#render_options');
+        const header = $('.review-ui-header');
+        this._$renderOptions = $('<div/>')
+            .addClass('render-options')
+            .insertAfter(header);
         this._renderOptionsView = new RB.XmlRenderOptionsView({
             el: this._$renderOptions,
             model: this.model

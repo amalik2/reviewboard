@@ -7,7 +7,7 @@
 RB.XmlRenderOptionsView = Backbone.View.extend({
 
     template: _.template(dedent`
-        <div id="render-same-line-container">
+        <div>
             <input type="checkbox" id="<%= checkboxId %>" />
             <label for="<%= checkboxId %>">
                 <%- labelText %>

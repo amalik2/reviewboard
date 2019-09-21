@@ -369,12 +369,11 @@ class XmlUiTests(TestCase):
         formatted_string = render_xml_as_html(xml)
 
         self.assertEqual(formatted_string, u"""\
-<div class="highlight"><pre><span></span><span class="nt">&lt;root</span> \
+<span class="nt">&lt;root</span> \
 <span class="na">test_key=</span><span class="s">&quot;test value&quot;\
 </span><span class="nt">&gt;</span>
     <span class="nt">&lt;child</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/root&gt;</span>
-</pre></div>
 """)
 
     def test_render_xml_as_html_single_quotes(self):
@@ -384,12 +383,11 @@ class XmlUiTests(TestCase):
         formatted_string = render_xml_as_html(xml)
 
         self.assertEqual(formatted_string, u"""\
-<div class="highlight"><pre><span></span><span class="nt">&lt;root</span> \
+<span class="nt">&lt;root</span> \
 <span class="na">test_key=</span><span class="s">&quot;test value&quot;\
 </span><span class="nt">&gt;</span>
     <span class="nt">&lt;child</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/root&gt;</span>
-</pre></div>
 """)
 
     def test_is_comment_element_with_comment(self):

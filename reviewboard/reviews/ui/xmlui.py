@@ -9,9 +9,9 @@ from django.utils.encoding import force_text, force_bytes
 
 from pygments.lexers import XmlLexer
 from pygments import highlight
-from pygments.formatters import HtmlFormatter
 
 from reviewboard.reviews.ui.text import TextBasedReviewUI
+from reviewboard.diffviewer.chunk_generator import NoWrapperHtmlFormatter
 
 
 def get_indent_str(indent_level):
@@ -287,9 +287,8 @@ def prettify_xml(xml, keep_text_on_same_line=False):
     return formatted_contents
 
 
-def remove_empty_lines_from_html(html_contents):
+def remove_trailing_newline(html_contents):
     """Removes empty content from the specified HTML."""
-    contents = html_contents.replace('<span></span>', '')
     if contents.endswith('\n'):
         contents = contents[:-1]
 
@@ -302,7 +301,7 @@ def render_xml_as_html(xml, keep_text_on_same_line=False):
     """
     pretty_contents = prettify_xml(xml, keep_text_on_same_line)
 
-    html_contents = highlight(pretty_contents, XmlLexer(), HtmlFormatter())
+    html_contents = highlight(pretty_contents, XmlLexer(), NoWrapperHtmlFormatter())
 
     return html_contents
 
@@ -325,8 +324,6 @@ class XMLReviewUI(TextBasedReviewUI):
     supported_mimetypes = ['application/xml', 'text/xml']
     object_key = 'xml'
     can_render_text = True
-
-    extra_css_classes = ['xml-review-ui']
 
     js_model_class = 'RB.XMLBasedReviewable'
     js_view_class = 'RB.XMLReviewableView'

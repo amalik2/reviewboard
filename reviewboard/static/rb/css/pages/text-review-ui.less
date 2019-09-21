@@ -167,14 +167,3 @@
     }
   }
 }
-
-/****************************************************************************
- * XML-specific styles
- ****************************************************************************/
-.xml-review-ui {
-  // this is a workaround for extra whitespace being added to the first line
-  // while in the file differ view (but not in the normal view)
-  tr[line='1'] > td > pre:first-of-type {
-    white-space: unset;
-  }
-}

@@ -2,8 +2,6 @@
  * Displays a review UI for XML files.
  */
 RB.XMLReviewableView = RB.TextBasedReviewableView.extend({
-    className: 'xml-review-ui',
-
     initialize(options) {
         RB.TextBasedReviewableView.prototype.initialize.call(
             this, options);

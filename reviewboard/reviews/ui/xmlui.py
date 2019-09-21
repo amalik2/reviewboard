@@ -287,21 +287,14 @@ def prettify_xml(xml, keep_text_on_same_line=False):
     return formatted_contents
 
 
-def remove_trailing_newline(html_contents):
-    """Removes empty content from the specified HTML."""
-    if contents.endswith('\n'):
-        contents = contents[:-1]
-
-    return contents
-
-
 def render_xml_as_html(xml, keep_text_on_same_line=False):
     """Converts the specified xml into syntax-highlighted HTML, with proper
     escaping of the contents according to html requirements.
     """
     pretty_contents = prettify_xml(xml, keep_text_on_same_line)
 
-    html_contents = highlight(pretty_contents, XmlLexer(), NoWrapperHtmlFormatter())
+    html_contents = highlight(
+        pretty_contents, XmlLexer(), NoWrapperHtmlFormatter())
 
     return html_contents
 

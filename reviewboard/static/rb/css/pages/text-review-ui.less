@@ -172,29 +172,6 @@
  * Jupyer Notebook-specific styles
  ****************************************************************************/
 .jupyter-review-ui {
-  .inner_cell {
-    min-width: 0;
-    /* Old browsers */
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-box-align: stretch;
-    display: -moz-box;
-    -moz-box-orient: vertical;
-    -moz-box-align: stretch;
-    display: box;
-    box-orient: vertical;
-    box-align: stretch;
-    /* Modern browsers */
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    /* Old browsers */
-    -webkit-box-flex: 1;
-    -moz-box-flex: 1;
-    box-flex: 1;
-    /* Modern browsers */
-    flex: 1;
-  }
 
   .input_area {
     border: 1px solid #cfcfcf;
@@ -219,8 +196,16 @@
       white-space: inherit;
     }
 
-    .input_area, .output {
+    .input_area {
       white-space: pre-wrap;
+    }
+  }
+
+  .output {
+    white-space: unset;
+
+    pre {
+      white-space: pre-line;
     }
   }
 }

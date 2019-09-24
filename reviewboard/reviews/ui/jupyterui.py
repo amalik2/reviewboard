@@ -1,18 +1,14 @@
 from __future__ import unicode_literals
 
 import logging
-import json
 import nbformat
 
-from django.utils.translation import ugettext as _
-from djblets.markdown import iter_markdown_lines
 from pygments.lexers import JsonLexer
 from nbconvert import HTMLExporter
 from lxml import etree
 
 from reviewboard.reviews.chunk_generators import MarkdownDiffChunkGenerator
 from reviewboard.reviews.ui.text import TextBasedReviewUI
-from reviewboard.reviews.markdown_utils import render_markdown_from_file
 
 
 class CustomHTMLExporter(HTMLExporter):
@@ -44,6 +40,13 @@ def convert_node_to_string(node):
     return etree.tostring(node).replace('\\&lt;', '&lt;')
 
 
+def get_contents_of_node(node):
+    contents = []
+    for child in node.getchildren():
+        contents.append(child.getchildren()[0])
+    return contents
+
+
 def render_notebook_data(notebook):
     data = nb_exporter.from_notebook_node(notebook)[0]
     parser = etree.HTMLParser()
@@ -53,14 +56,15 @@ def render_notebook_data(notebook):
     filter_generated_html(root)
     elements = []
     for node in root.getchildren():
-        elements.append(convert_node_to_string(node))
+        for content_node in get_contents_of_node(node):
+            elements.append(convert_node_to_string(content_node))
 
     return elements
 
 
 # TODO: thumbnails
-# TODO: diff chunks
 # TODO: unit tests
+# TODO: disable some preprocessors
 class JupyterReviewUI(TextBasedReviewUI):
     """A Review UI for Jupyter notebook files.
 
@@ -70,8 +74,7 @@ class JupyterReviewUI(TextBasedReviewUI):
     supported_mimetypes = ['application/ipynb+json']
     object_key = 'jupyter'
     can_render_text = True
-    # TODO: fix this
-    #rendered_chunk_generator_cls = MarkdownDiffChunkGenerator
+    rendered_chunk_generator_cls = MarkdownDiffChunkGenerator
 
     extra_css_classes = ['jupyter-review-ui']
 

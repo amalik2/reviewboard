@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import logging
 import nbformat
 
+from django.utils.translation import ugettext as _
 from pygments.lexers import JsonLexer
 from nbconvert import HTMLExporter
 from lxml import etree
@@ -27,6 +28,7 @@ class CustomHTMLExporter(HTMLExporter):
 
 
 nb_exporter = CustomHTMLExporter()
+
 
 def filter_generated_html(root):
     for anchor in root.xpath('//a[@class="anchor-link"]'):

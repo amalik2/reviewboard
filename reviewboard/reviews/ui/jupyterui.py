@@ -4,6 +4,8 @@ import logging
 import nbformat
 
 from django.utils.translation import ugettext as _
+from django.utils.encoding import force_text
+
 from pygments.lexers import JsonLexer
 from nbconvert import HTMLExporter
 from lxml import etree
@@ -22,6 +24,15 @@ class CustomHTMLExporter(HTMLExporter):
         config.merge({
             'CSSHTMLHeaderPreprocessor': {
                 'enabled': False
+            },
+            'RegexRemovePreprocessor': {
+                'enabled': False
+            },
+            'HighlightMagicsPreprocessor': {
+                'enabled': False
+            },
+            'TagRemovePreprocessor': {
+                'enabled': False
             }
         })
         return config
@@ -39,7 +50,8 @@ def filter_generated_html(root):
 
 
 def convert_node_to_string(node):
-    return etree.tostring(node).replace('\\&lt;', '&lt;')
+    node_as_string = force_text(etree.tostring(node))
+    return node_as_string.replace('\\&lt;', '&lt;')
 
 
 def get_contents_of_node(node):
@@ -51,9 +63,14 @@ def get_contents_of_node(node):
 
 def render_notebook_data(notebook):
     data = nb_exporter.from_notebook_node(notebook)[0]
+    
     parser = etree.HTMLParser()
-    root = etree.fromstring(
-        '<html>%s</html>' % data, parser=parser).getchildren()[0]
+    html_tree = etree.fromstring(
+        '<html>%s</html>' % data, parser=parser).getchildren()
+    if not html_tree:
+        return []
+
+    root = html_tree[0]
 
     filter_generated_html(root)
     elements = []
@@ -64,9 +81,6 @@ def render_notebook_data(notebook):
     return elements
 
 
-# TODO: thumbnails
-# TODO: unit tests
-# TODO: disable some preprocessors
 class JupyterReviewUI(TextBasedReviewUI):
     """A Review UI for Jupyter notebook files.
 

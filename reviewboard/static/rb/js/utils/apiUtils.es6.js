@@ -199,7 +199,8 @@ RB.apiCall = function(options) {
         const data = $.extend(true, {
             url: url,
             data: options.data,
-            dataType: options.dataType || 'json',
+            dataType: options.dataType || 'json'
+        }, options, {
             error: function(xhr, textStatus, errorThrown) {
                 const responseText = xhr.responseText;
 
@@ -251,7 +252,7 @@ RB.apiCall = function(options) {
 
                 $.funcQueue('rbapicall').next();
             }
-        }, options);
+        });
 
         if (data.data === null || data.data === undefined ||
             (data.data instanceof Object &&

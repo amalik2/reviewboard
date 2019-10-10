@@ -60,6 +60,13 @@ RB.TextCommentRowSelector = Backbone.View.extend({
 
         this._$ghostCommentFlag = null;
         this._$ghostCommentFlagCell = null;
+
+        options.reviewableView.on('contentReloaded', (context) => {
+            if (context.$el === options.el) {
+                this._reset();
+                options.reviewableView.refreshComments();
+            }
+        });
     },
 
     /**

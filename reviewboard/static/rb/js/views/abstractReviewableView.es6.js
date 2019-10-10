@@ -33,6 +33,7 @@ RB.AbstractReviewableView = Backbone.View.extend({
         this.commentDlg = null;
         this._activeCommentBlock = null;
         this.renderedInline = options.renderedInline || false;
+        this.commentBlockViews = [];
     },
 
     /**
@@ -47,11 +48,16 @@ RB.AbstractReviewableView = Backbone.View.extend({
      */
     render() {
         this.renderContent();
+        this.renderCommentBlocks();
+        return this;
+    },
 
+    /**
+     * Renders all comment blocks into the view.
+     */
+    renderCommentBlocks() {
         this.model.commentBlocks.each(this._addCommentBlockView, this);
         this.model.commentBlocks.on('add', this._addCommentBlockView, this);
-
-        return this;
     },
 
     /**
@@ -128,6 +134,28 @@ RB.AbstractReviewableView = Backbone.View.extend({
     },
 
     /**
+     * Removes all comments from the view, and re-attaches them
+     */
+    refreshComments() {
+        this._hideCommentDlg();
+        this._disposeComments();
+        this.renderCommentBlocks();
+    },
+
+    _hideCommentDlg() {
+        if (this.commentDlg) {
+            this.commentDlg.close();
+        }
+    },
+
+    _disposeComments() {
+        this.commentBlockViews.forEach((view) => {
+            view.dispose();
+        });
+        this.commentBlockViews = [];
+    },
+
+    /**
      * Add a CommentBlockView for the given CommentBlock.
      *
      * This will create a view for the block, render it, listen for clicks
@@ -145,6 +173,7 @@ RB.AbstractReviewableView = Backbone.View.extend({
 
         commentBlockView.on('clicked', () => this.showCommentDlg(commentBlockView));
         commentBlockView.render();
+        this.commentBlockViews.push(commentBlockView);
         this.trigger('commentBlockViewAdded', commentBlockView);
     },
 });

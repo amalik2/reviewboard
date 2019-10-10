@@ -30,11 +30,114 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic import RedirectView
 from djblets.feedview.views import view_feed
+# TODO: remove below line
+from django.http import HttpResponse
 
 from reviewboard.admin import forms, views
 
 
 NEWS_FEED = 'https://www.reviewboard.org/news/feed/'
+
+def one_line_dynamic_test(request):
+    return HttpResponse("""
+    <colgroup>
+
+  <col class="line">
+  <col class="right">
+ </colgroup>
+
+ <thead>
+  <tr class="revision-row">
+
+
+   <th></th>
+   <th>
+     test.xml
+
+
+     (revision 8)
+
+
+   </th>
+  </tr>
+ </thead>
+
+
+ <tbody>
+
+  <tr line="1">
+   <th>1</th>
+   <td class="l"><h1>f</h1></td>
+  </tr>
+
+  <tr line="2">
+   <th>2</th>
+   <td class="l">
+</td>
+ </tbody>
+""")
+
+# TODO: remove this
+def dynamic_test(request):
+    #return one_line_dynamic_test(request)
+    return HttpResponse("""
+<colgroup>
+
+  <col class="line">
+  <col class="right">
+ </colgroup>
+
+ <thead>
+  <tr class="revision-row">
+
+
+   <th></th>
+   <th>
+     test.xml
+
+
+     (revision 8)
+
+
+   </th>
+  </tr>
+ </thead>
+
+
+
+
+
+ <tbody>
+
+  <tr line="1">
+   <th>1</th>
+   <td class="l"><h1>Updated line 1</h1></td>
+  </tr>
+
+  <tr line="2">
+   <th>2</th>
+   <td class="l">
+</td>
+  </tr>
+
+  <tr line="3">
+   <th>3</th>
+   <td class="l"><h1>A newly added line</h1></td>
+  </tr>
+
+  <tr line="4">
+   <th>4</th>
+   <td class="l">
+</td>
+  </tr>
+
+  <tr line="5">
+   <th>5</th>
+   <td class="l"><h1>Another newly added line</h1></td>
+  </tr>
+
+ </tbody>
+""")
 
 urlpatterns = [
     url(r'^$', views.dashboard, name='admin-dashboard'),
@@ -56,6 +159,8 @@ urlpatterns = [
         RedirectView.as_view(url=NEWS_FEED, permanent=True)),
 
     url(r'^log/', include('djblets.log.urls')),
+    # TODO: remove below line
+    url(r'^testdynamic/', dynamic_test),
 
     url(r'^security/$', views.security, name='admin-security-checks'),
 

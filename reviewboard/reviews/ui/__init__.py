@@ -9,10 +9,12 @@ def _register_review_uis(**kwargs):
     from reviewboard.reviews.ui.image import ImageReviewUI
     from reviewboard.reviews.ui.markdownui import MarkdownReviewUI
     from reviewboard.reviews.ui.text import TextBasedReviewUI
+    from reviewboard.reviews.ui.audio import AudioReviewUI
 
     register_ui(ImageReviewUI)
     register_ui(MarkdownReviewUI)
     register_ui(TextBasedReviewUI)
+    register_ui(AudioReviewUI)
 
 
 initializing.connect(_register_review_uis)

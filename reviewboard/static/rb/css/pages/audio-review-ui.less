@@ -1,0 +1,134 @@
+@_thumbnail-color: rgb(29, 40, 136);
+
+/**
+ * This mixin provides the attributes common between different browsers
+ * for changing the appearance of the audio volume slider thumbnail element.
+ */
+._slider-thumbnail() {
+  width: 17px;
+  height: 17px;
+  background-color: @_thumbnail-color;
+  border-color: @_thumbnail-color;
+  cursor: pointer;
+  border-radius: 11px;
+}
+
+/**
+ * Styles for the audio review UI page
+ */
+.audio-review-ui {
+  background: white;
+  position: relative;
+
+  .spectrogram-checkbox {
+    padding-left: 12px;
+  }
+
+  .audio-player {
+    cursor: pointer;
+
+    .wavesurfer-region {
+      height: 25% !important;
+
+      .draft {
+        cursor: pointer;
+        height: 100%;
+      }
+
+      /**
+       * The top of the "Comment Deleted" notification gets cut off without
+       * this rule.
+       */
+      .bubble {
+        position: relative;
+        width: fit-content;
+        z-index: 10;
+      }
+
+      /**
+       * When multiple comments in the same stack are deleted, multiple
+       * notifications are shown. This issue is not visible with other review
+       * UIs because they do not use the position: relative attribute. Here,
+       * we just hide all but the first notification.
+       */
+      .bubble ~ .bubble {
+        display: none;
+      }
+    }
+  }
+
+  .audio-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .playback-speed-container {
+      margin-right: 2.5em;
+
+      & > label {
+        margin-right: 1em;
+        font-size: 12pt;
+      }
+    }
+
+    .play-audio-button, .pause-audio-button {
+      font-size: 36pt;
+      cursor: pointer;
+    }
+
+    .audio-volume-container {
+      margin-left: 2.5em;
+
+      .volume-icon {
+        font-size: 18pt;
+      }
+
+      .volume {
+        height: 10px;
+        background: #575757;
+        outline: none;
+        opacity: 0.8;
+        transition: opacity .2s;
+        border-radius: 8px;
+        margin-left: 0.5em;
+
+        &:hover {
+          opacity: 1;
+        }
+
+        &::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          ._slider-thumbnail;
+        }
+
+        &::-moz-range-thumb {
+          ._slider-thumbnail;
+        }
+
+        /* outline: none doesn't work on firefox */
+        &::-moz-focus-outer {
+          border: 0;
+        }
+      }
+    }
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .review-ui-error {
+    text-align: center;
+    padding: 2em;
+  }
+
+  .review-ui-inline & {
+    padding: 0;
+  }
+
+  .caption {
+    margin-bottom: 1em;
+    text-align: center;
+  }
+}

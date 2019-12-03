@@ -13,6 +13,11 @@
     <div id="attachment_revision_selector"></div>
 {%  endif %}
 
+<div class="render-options">
+ {% block render_options %}
+ {% endblock %}
+</div>
+
 {%  if review_ui.can_render_text and not diff_type_mismatch %}
     <div class="text-review-ui-views">
      <ul>

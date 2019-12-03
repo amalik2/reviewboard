@@ -30,7 +30,7 @@ RB.XMLReviewableView = RB.TextBasedReviewableView.extend({
     renderContent() {
         RB.TextBasedReviewableView.prototype.renderContent.call(this);
 
-        const $renderOptionsContainer = $('.review-ui-header');
+        const $renderOptionsContainer = $('.render-options');
         const renderOptionsView = new RB.XMLRenderOptionsView({
             model: this.model,
             el: $renderOptionsContainer

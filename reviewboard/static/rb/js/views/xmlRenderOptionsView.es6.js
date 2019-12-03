@@ -2,14 +2,11 @@
  * Displays the different render options available for XML files.
  */
 RB.XMLRenderOptionsView = Backbone.View.extend({
-    // TODO: remove the render-options class once the template PR is merged
     template: _.template(dedent`
-        <div class="render-options">
          <input type="checkbox" id="<%= checkboxId %>"/>
          <label for="<%= checkboxId %>">
           <%- labelText %>
          </label>
-        </div>
     `),
 
     /**

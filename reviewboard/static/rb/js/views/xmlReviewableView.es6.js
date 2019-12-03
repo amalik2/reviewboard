@@ -13,8 +13,14 @@ RB.XMLReviewableView = RB.TextBasedReviewableView.extend({
         RB.TextBasedReviewableView.prototype.initialize.call(this, options);
 
         this.model.on('change:renderTextContentOnSameLine', (e) => {
-            // TODO: make AJAX request
-            // TODO: refresh comments (should be handled automatically by the ajax function)
+            const renderOptions = {
+                renderTextContentOnSameLine: this.model.get(
+                    'renderTextContentOnSameLine')
+            };
+
+            this.reloadContentFromServer(
+                this.CONTENT_TYPE_RENDERED_TEXT, renderOptions,
+                this._$renderedTable);
         });
     },
 

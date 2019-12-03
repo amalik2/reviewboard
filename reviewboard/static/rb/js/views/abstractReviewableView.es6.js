@@ -33,6 +33,7 @@ RB.AbstractReviewableView = Backbone.View.extend({
         this.commentDlg = null;
         this._activeCommentBlock = null;
         this.renderedInline = options.renderedInline || false;
+        this.commentBlockViews = [];
     },
 
     /**
@@ -47,11 +48,16 @@ RB.AbstractReviewableView = Backbone.View.extend({
      */
     render() {
         this.renderContent();
+        this.renderCommentBlocks();
+        return this;
+    },
 
+    /**
+     * Renders all comment blocks into the view.
+     */
+    renderCommentBlocks() {
         this.model.commentBlocks.each(this._addCommentBlockView, this);
         this.model.commentBlocks.on('add', this._addCommentBlockView, this);
-
-        return this;
     },
 
     /**
@@ -128,12 +134,34 @@ RB.AbstractReviewableView = Backbone.View.extend({
     },
 
     /**
+     * Removes all comments from the view, and re-attaches them
+     */
+    refreshComments() {
+        this._hideCommentDlg();
+        this._disposeComments();
+        this.renderCommentBlocks();
+    },
+
+    _hideCommentDlg() {
+        if (this.commentDlg) {
+            this.commentDlg.close();
+        }
+    },
+
+    _disposeComments() {
+        this.commentBlockViews.forEach((view) => {
+            view.dispose();
+        });
+        this.commentBlockViews = [];
+    },
+
+    /**
      * Gets whether the specified comment block should be rendered or not.
-     * 
+     *
      * Args:
      *     commentBlock (RB.AbstractCommentBlock):
      *         The comment block to check the status of.
-     * 
+     *
      * Returns:
      *     boolean:
      *     Whether the comment block should be rendered or not.
@@ -157,13 +185,13 @@ RB.AbstractReviewableView = Backbone.View.extend({
         if (!this.shouldRenderCommentBlock(commentBlock)) {
             return;
         }
-
         const commentBlockView = new this.commentBlockView({
             model: commentBlock
         });
 
         commentBlockView.on('clicked', () => this.showCommentDlg(commentBlockView));
         commentBlockView.render();
+        this.commentBlockViews.push(commentBlockView);
         this.trigger('commentBlockViewAdded', commentBlockView);
     },
 });

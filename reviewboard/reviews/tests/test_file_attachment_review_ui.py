@@ -1,9 +1,11 @@
 """Unit tests for reviewboard.reviews.ui.base.FileAttachmentReviewUI."""
 from __future__ import unicode_literals
 
+from django.core.urlresolvers import reverse
+from django.conf.urls import url
+from django.utils.text import slugify
 from djblets.testing.decorators import add_fixtures
 from kgb import SpyAgency
-
 from reviewboard.reviews.ui.base import (FileAttachmentReviewUI,
                                          register_ui,
                                          unregister_ui)
@@ -17,6 +19,7 @@ class MyReviewUI(FileAttachmentReviewUI):
     supports_diffing = True
 
 
+# noinspection PyTypeChecker
 class FileAttachmentReviewUITests(SpyAgency, TestCase):
     """Unit tests for reviewboard.reviews.ui.base.FileAttachmentReviewUI."""
 
@@ -458,3 +461,80 @@ class FileAttachmentReviewUITests(SpyAgency, TestCase):
                     'username': 'dopey',
                 },
             })
+
+    def test_register_review_ui_id_set(self):
+        """Testing register_ui with a review_ui_id set.
+        """
+        class ReviewUIWithId(FileAttachmentReviewUI):
+            supported_mimetypes = ['application/reviewid']
+            review_ui_id = 'test'
+
+        self.spy_on(ReviewUIWithId.__init__,
+                    owner=ReviewUIWithId)
+        register_ui(ReviewUIWithId)
+
+        try:
+            attachment = self.create_file_attachment(
+                self.review_request,
+                mimetype='application/reviewid',
+            )
+            review_ui = attachment.review_ui
+            self.assertIsInstance(review_ui, ReviewUIWithId)
+        finally:
+            unregister_ui(ReviewUIWithId)
+
+    def test_register_review_ui_no_id_set(self):
+        """Testing register_ui with no review_ui_id set.
+        """
+        class ReviewUIWithoutId(FileAttachmentReviewUI):
+            supported_mimetypes = ['application/noreviewid']
+
+        self.spy_on(ReviewUIWithoutId.__init__,
+                    owner=ReviewUIWithoutId)
+        register_ui(ReviewUIWithoutId)
+
+        try:
+            attachment = self.create_file_attachment(
+                self.review_request,
+                mimetype='application/noreviewid',
+            )
+            review_ui = attachment.review_ui
+            expected_review_ui_id = slugify(
+                '%s.%s' % (review_ui.__module__, "ReviewUIWithoutId"))
+            self.assertEqual(review_ui.review_ui_id, expected_review_ui_id)
+            self.assertIsInstance(review_ui, ReviewUIWithoutId)
+        finally:
+            unregister_ui(ReviewUIWithoutId)
+
+    def test_register_review_ui_custom_url(self):
+        """ Testing register_ui with custom URLs.
+        """
+
+        def dummy_view():
+            pass
+
+        class URLPatternReviewUI(FileAttachmentReviewUI):
+            supported_mimetypes = ['application/urlpattern']
+            review_ui_id = 'testid'
+            url_patterns = [
+                url(r'^testpattern/$', dummy_view, name='testpattern')
+            ]
+
+        self.spy_on(URLPatternReviewUI.__init__,
+                    owner=URLPatternReviewUI)
+        register_ui(URLPatternReviewUI)
+
+        attachment = self.create_file_attachment(
+            self.review_request,
+            mimetype='application/urlpattern',
+        )
+        review_ui = attachment.review_ui
+
+        test_url = reverse('testpattern', args=(self.review_request.id,
+                                                attachment.id))
+        expected_url = '/r/%d/file/%d/%s/testpattern/' % \
+                       (self.review_request.id, attachment.id,
+                        review_ui.review_ui_id)
+
+        self.assertEqual(test_url, expected_url)
+        unregister_ui(URLPatternReviewUI)

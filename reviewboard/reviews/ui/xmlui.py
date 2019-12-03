@@ -345,6 +345,13 @@ def iter_htmlified_xml_lines(html):
             yield '<pre>%s</pre>' % line
 
 
+def get_render_text_on_line_setting(query_params):
+    renderOnSameLine = query_params.get('renderTextContentOnSameLine', False)
+    if type(renderOnSameLine) != bool:
+        return renderOnSameLine == 'true'
+    return renderOnSameLine
+
+
 class XMLReviewUI(TextBasedReviewUI):
     """A Review UI for XML files.
 
@@ -358,12 +365,13 @@ class XMLReviewUI(TextBasedReviewUI):
     js_model_class = 'RB.XMLBasedReviewable'
     js_view_class = 'RB.XMLReviewableView'
 
-    def generate_render(self):
+    def generate_render(self, **kwargs):
         try:
             with self.obj.file as f:
                 f.open()
                 contents = f.read()
-                rendered = render_xml_as_html(contents)
+                rendered = render_xml_as_html(
+                    contents, get_render_text_on_line_setting(kwargs))
 
             for line in iter_htmlified_xml_lines(rendered):
                 yield line

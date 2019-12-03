@@ -8,7 +8,6 @@
  */
 RB.TextBasedReviewableView = RB.FileAttachmentReviewableView.extend({
     commentBlockView: RB.TextBasedCommentBlockView,
-
     /**
      * Initialize the view.
      *
@@ -27,7 +26,6 @@ RB.TextBasedReviewableView = RB.FileAttachmentReviewableView.extend({
         this._renderedSelector = null;
 
         this.on('commentBlockViewAdded', this._placeCommentBlockView, this);
-
         this.router = new Backbone.Router({
             routes: {
                 ':viewMode(/line:lineNum)': 'viewMode',
@@ -54,6 +52,9 @@ RB.TextBasedReviewableView = RB.FileAttachmentReviewableView.extend({
                 this._scrollToLine(lineNum);
             }
         });
+
+        this.CONTENT_TYPE_RENDERED_TEXT = 'rendered';
+        this.CONTENT_TYPE_SOURCE_TEXT = 'source';
     },
 
     /**
@@ -64,6 +65,58 @@ RB.TextBasedReviewableView = RB.FileAttachmentReviewableView.extend({
 
         this._textSelector.remove();
         this._renderedSelector.remove();
+    },
+
+    /**
+     * Gets the endpoint to hit to reload content for the file
+     * from the server.
+     *
+     * Returns:
+     *     String:
+     *     The endpoint to hit.
+     */
+    getReloadContentEndpoint(renderType) {
+        return this.model.get('reviewRequest').get('reviewURL')
+            + 'file/' + this.model.get('fileAttachmentID') + '/'
+            + this.model.get('reviewUIId') + '/_render/' + renderType;
+    },
+
+    /**
+     * Updates the specified element with by reloading it's text content
+     * from the server.
+     *
+     * Args:
+     *     renderType (string):
+     *         The type of the content that should be reloaded.
+     *     options (object):
+     *         Extra details to pass to the endpoint as query parameters.
+     *     $elementToUpdate (jQuery):
+     *         The DOM element to update.
+     */
+    reloadContentFromServer(renderType, options, $elementToUpdate) {
+        const $renderOptions = $('.render-options');
+        $renderOptions.addClass('rb-u-disabled-container');
+        $elementToUpdate.html('');
+
+        RB.apiCall({
+            url: this.getReloadContentEndpoint(renderType),
+            type: 'GET',
+            data: $.extend(true, options, {
+                type: renderType
+            }),
+            dataType: 'html',
+            success: (response) => {
+                $elementToUpdate.html(response);
+                this.trigger('contentReloaded', {
+                    renderType,
+                    options,
+                    $el: $elementToUpdate
+                });
+            },
+            complete: () => {
+                $renderOptions.removeClass('rb-u-disabled-container');
+            }
+        });
     },
 
     /**

@@ -3,27 +3,94 @@ from __future__ import unicode_literals
 import json
 import logging
 import os
+import re
+import warnings
 from uuid import uuid4
 
 import mimeparse
+from django.conf.urls import include, url
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.utils import six
-from django.utils.safestring import mark_safe
+from django.utils.text import slugify
 from django.utils.translation import ugettext as _
+from django.views.generic.base import View
 from djblets.util.compat.django.template.loader import render_to_string
-
+from reviewboard.accounts.mixins import UserProfileRequiredViewMixin
 from reviewboard.attachments.mimetypes import MIMETYPE_EXTENSIONS, score_match
 from reviewboard.attachments.models import (FileAttachment,
                                             get_latest_file_attachments)
+from reviewboard.deprecation import RemovedInReviewBoard60Warning
 from reviewboard.reviews.context import make_review_request_context
 from reviewboard.reviews.markdown_utils import (markdown_render_conditional,
                                                 normalize_text_for_edit)
-from reviewboard.reviews.models import FileAttachmentComment, Review
+from reviewboard.reviews.models import (FileAttachmentComment, Review,
+                                        ReviewRequest)
+from reviewboard.reviews.views_mixins import ReviewFileAttachmentViewMixin
 from reviewboard.site.urlresolvers import local_site_reverse
 
 
 _file_attachment_review_uis = []
+_file_attachment_url_patterns = {}
+
+
+class BaseReviewUIUtilityView(ReviewFileAttachmentViewMixin,
+                              UserProfileRequiredViewMixin,
+                              View):
+
+    def dispatch(self, request, local_site=None, *args, **kwargs):
+        """Dispatch the view.
+
+
+        Args:
+            request (django.http.HttpRequest):
+                The current HTTP request.
+
+            local_site (reviewboard.site.models.LocalSite):
+                The LocalSite on which the UI is being requested.
+
+            *args (tuple, unused):
+                Ignored positional arguments.
+
+            **kwargs (dict, unused):
+                Ignored keyword arguments.
+
+        Returns:
+            django.http.HttpResponse:
+            The HTTP response for the search.
+        """
+        file_attachment_id = kwargs['file_attachment_id']
+
+        if 'file_attachment_diff_id' in kwargs:
+            file_attachment_diff_id = kwargs['file_attachment_diff_id']
+        else:
+            file_attachment_diff_id = None
+
+        review_request_id = kwargs['review_request_id']
+        if local_site:
+            review_request = ReviewRequest.objects.get(
+                local_site=local_site, local_id=review_request_id)
+        else:
+            review_request = ReviewRequest.objects.get(pk=review_request_id)
+
+        file_attachment, file_attachment_revision = self.get_attachments(
+            request, file_attachment_id, review_request,
+            file_attachment_diff_id)
+
+        self.review_ui = self.set_attachment_ui(file_attachment)
+        self.review_ui.review_request = review_request
+
+        if file_attachment_revision:
+            self.review_ui.set_diff_against(file_attachment_revision)
+
+        is_enabled_for = self.set_enabled_for(request, self.review_ui,
+                                              review_request, file_attachment)
+        if self.review_ui and is_enabled_for:
+            return super(BaseReviewUIUtilityView, self).dispatch(request,
+                                                                 *args,
+                                                                 **kwargs)
+        else:
+            raise Http404
 
 
 class ReviewUI(object):
@@ -82,6 +149,13 @@ class ReviewUI(object):
 
     #: Whether this Review UI supports diffing two objects.
     supports_diffing = False
+
+    #: The id of the file format namespace to use for the Review UI.
+    #: This should be set on all custom Review UIs.
+    review_ui_id = None
+
+    #: URL patterns registered by the subclass. This defaults to None.
+    url_patterns = None
 
     #: A list of CSS bundle names to include on the Review UI's page.
     css_bundle_names = []
@@ -884,6 +958,27 @@ def register_ui(review_ui):
         raise TypeError('Only FileAttachmentReviewUI subclasses can be '
                         'registered')
 
+    if not review_ui.review_ui_id:
+        review_ui.review_ui_id = slugify(
+            '%s.%s' % (review_ui.__module__, review_ui.__name__))
+        warnings.warn('%r should set review_ui_id. This will be required '
+                      'in Review Board 6.0. Defaulting the ID Defaulting '
+                      'the ID to "%s".'
+                      % (review_ui, review_ui.review_ui_id),
+                      RemovedInReviewBoard60Warning,
+                      stacklevel=2)
+
+    if review_ui.url_patterns:
+        import reviewboard.reviews.urls as review_request_urls
+        ui_urlpatterns = [
+            url(r'^%s/'
+                % re.escape(review_ui.review_ui_id),
+                include(review_ui.url_patterns)),
+        ]
+
+        _file_attachment_url_patterns[review_ui.review_ui_id] = ui_urlpatterns
+        review_request_urls.dynamic_review_ui_urls.add_patterns(ui_urlpatterns)
+
     _file_attachment_review_uis.append(review_ui)
 
 
@@ -911,6 +1006,13 @@ def unregister_ui(review_ui):
     if not issubclass(review_ui, FileAttachmentReviewUI):
         raise TypeError('Only FileAttachmentReviewUI subclasses can be '
                         'unregistered')
+
+    if review_ui.review_ui_id in _file_attachment_url_patterns:
+        import reviewboard.reviews.urls as review_request_urls
+        ui_urlpatterns = _file_attachment_url_patterns[review_ui.review_ui_id]
+        review_request_urls.dynamic_review_ui_urls\
+            .remove_patterns(ui_urlpatterns)
+        del _file_attachment_url_patterns[review_ui.review_ui_id]
 
     try:
         _file_attachment_review_uis.remove(review_ui)

@@ -11,9 +11,19 @@ suite('rb/views/TextBasedReviewableView', function() {
        </div>
        <table class="text-review-ui-rendered-table"></table>
        <table class="text-review-ui-text-table"></table>
+       <div class="render-options"></div>
       </div>
     `;
 
+    function getMostRecentApiCallOptions() {
+        return RB.apiCall.calls.mostRecent().args[0];
+    }
+    function spyAndForceAjaxSuccess(responseBody = '') {
+        spyOn($, 'ajax').and.callFake(request => {
+            request.success(responseBody);
+            request.complete();
+        });
+    }
     let $container;
     let reviewRequest;
     let model;
@@ -56,6 +66,7 @@ suite('rb/views/TextBasedReviewableView', function() {
                 Backbone.history.loadUrl(url);
             }
         });
+        spyOn(RB, 'apiCall').and.callThrough();
 
         view.render();
     });
@@ -83,4 +94,55 @@ suite('rb/views/TextBasedReviewableView', function() {
         expect($container.find('.active').attr('data-view-mode')).toBe('rendered');
         expect(model.get('viewMode')).toBe('rendered');
     });
+        it('reloadContentFromServer disables render options during the request',
+        function() {
+            const $renderOptions = $('.render-options');
+            view.reloadContentFromServer(
+                'rendered', {}, view._$renderedTable);
+            expect($renderOptions.hasClass('rb-u-disabled-container')).toEqual(true);
+        }
+    );
+    it('reloadContentFromServer re-enables render options after the request',
+        function() {
+            spyAndForceAjaxSuccess();
+            const $renderOptions = $('.render-options');
+            view.reloadContentFromServer(
+                'rendered', {}, view._$renderedTable);
+            expect($renderOptions.hasClass('rb-u-disabled-container')).toEqual(false);
+        }
+    );
+    it('reloadContentFromServer properly combines extra render option data',
+        function() {
+            view.reloadContentFromServer(
+                'rendered', {
+                    sortKeys: false
+                }, view._$renderedTable);
+            const options = getMostRecentApiCallOptions();
+            expect(options.data).toEqual({
+                type: 'rendered',
+                sortKeys: false
+            });
+        }
+    );
+    it('reloadContentFromServer should emit contentReloaded on success',
+        function() {
+            spyAndForceAjaxSuccess();
+            let contentReloaded = false;
+            view.on('contentReloaded', () => {
+                contentReloaded = true;
+            });
+            view.reloadContentFromServer(
+                'rendered', {}, view._$renderedTable);
+            expect(contentReloaded).toEqual(true);
+        }
+    );
+    it('reloadContentFromServer should update the contents of the element',
+        function() {
+            const contents = '<div>new table contents</div>';
+            spyAndForceAjaxSuccess(contents);
+            view.reloadContentFromServer(
+                'rendered', {}, view._$renderedTable);
+            expect(view._$renderedTable.html()).toEqual(contents);
+        }
+    );
 });

@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from django.http import HttpResponse, Http404
 from django.utils.encoding import force_bytes
 from django.utils.safestring import mark_safe
 from djblets.cache.backend import cache_memoize
@@ -9,12 +10,47 @@ from djblets.util.compat.django.template.loader import render_to_string
 from pygments import highlight
 from pygments.lexers import (ClassNotFound, guess_lexer_for_filename,
                              TextLexer)
-
+from django.conf.urls import url
 from reviewboard.attachments.models import FileAttachment
 from reviewboard.diffviewer.chunk_generator import (NoWrapperHtmlFormatter,
                                                     RawDiffChunkGenerator)
 from reviewboard.diffviewer.diffutils import get_chunks_in_range
-from reviewboard.reviews.ui.base import FileAttachmentReviewUI
+from reviewboard.reviews.ui.base import (FileAttachmentReviewUI,
+                                         BaseReviewUIUtilityView)
+
+
+class TextBasedReviewUITextView(BaseReviewUIUtilityView):
+    """Displays a text file attachment with a review UI."""
+    def get(self, request, *args, **kwargs):
+        for query_param in request.GET:
+            kwargs[query_param] = request.GET[query_param]
+        render_type = kwargs.get('render_type', 'source')
+
+        if render_type not in ['rendered', 'source']:
+            raise Http404
+
+        try:
+            context = self.review_ui.build_render_context(request, inline=True)
+            context.update(self.review_ui.get_extra_context(request))
+        except Exception as e:
+            context = {}
+            logging.exception('Error when calling get_extra_context for '
+                              '%r: %s', self, e)
+
+        if render_type == 'rendered':
+            template = 'reviews/ui/_text_rendered_table.html'
+            context['lines'] = [
+                mark_safe(line)
+                for line in self.review_ui.generate_render(**kwargs)
+            ]
+            context['chunks'] = context.get('rendered_chunks', None)
+        else:
+            template = 'reviews/ui/_text_table.html'
+            context['lines'] = context['text_lines']
+            context['chunks'] = context.get('source_chunks', None)
+
+        return HttpResponse(render_to_string(template_name=template,
+                                             context=context, request=request))
 
 
 class TextBasedReviewUI(FileAttachmentReviewUI):
@@ -29,6 +65,8 @@ class TextBasedReviewUI(FileAttachmentReviewUI):
         'text/*',
         'application/x-javascript',
     ]
+    review_ui_id = 'text'
+
     template_name = 'reviews/ui/text.html'
     comment_thumbnail_template_name = 'reviews/ui/text_comment_thumbnail.html'
     can_render_text = False
@@ -42,9 +80,19 @@ class TextBasedReviewUI(FileAttachmentReviewUI):
     js_model_class = 'RB.TextBasedReviewable'
     js_view_class = 'RB.TextBasedReviewableView'
 
+    url_patterns = [
+        url(r'^_render/(?P<render_type>[\w.@+-]+)',
+            TextBasedReviewUITextView.as_view(),
+            name='render_options')
+    ]
+
+    def customize_render(self):
+        pass
+
     def get_js_model_data(self):
         data = super(TextBasedReviewUI, self).get_js_model_data()
         data['hasRenderedView'] = self.can_render_text
+        data['reviewUIId'] = self.review_ui_id
 
         if self.can_render_text:
             data['viewMode'] = 'rendered'
@@ -56,7 +104,6 @@ class TextBasedReviewUI(FileAttachmentReviewUI):
     def get_extra_context(self, request):
         context = {}
         diff_type_mismatch = False
-
         if self.diff_against_obj:
             diff_against_review_ui = self.diff_against_obj.review_ui
 
@@ -103,7 +150,6 @@ class TextBasedReviewUI(FileAttachmentReviewUI):
             'num_revisions': num_revisions,
             'diff_type_mismatch': diff_type_mismatch,
         })
-
         return context
 
     def get_text(self):
@@ -177,7 +223,7 @@ class TextBasedReviewUI(FileAttachmentReviewUI):
         except ClassNotFound:
             return TextLexer()
 
-    def generate_render(self):
+    def generate_render(self, **kwargs):
         """Generates a render of the text.
 
         By default, this won't do anything. Subclasses should override it

@@ -36,6 +36,7 @@ from reviewboard.admin import forms, views
 
 NEWS_FEED = 'https://www.reviewboard.org/news/feed/'
 
+
 urlpatterns = [
     url(r'^$', views.dashboard, name='admin-dashboard'),
 

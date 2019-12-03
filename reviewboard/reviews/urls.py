@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
 
 from django.conf.urls import include, url
+from djblets.urls.resolvers import DynamicURLResolver
 
 from reviewboard.reviews import views
 
+dynamic_review_ui_urls = DynamicURLResolver()
 
 download_diff_urls = [
     url(r'^orig/$',
@@ -94,15 +96,20 @@ review_request_urls = [
         views.CommentDiffFragmentsView.as_view(),
         name='diff-comment-fragments'),
 
+
     # File attachments
-    url(r'^file/(?P<file_attachment_id>\d+)/$',
-        views.ReviewFileAttachmentView.as_view(),
-        name='file-attachment'),
+    url(r'^file/(?P<file_attachment_id>\d+)/', include([
+        dynamic_review_ui_urls,
+        url('$', views.ReviewFileAttachmentView.as_view(),
+            name='file-attachment'),
+    ])),
 
     url(r'^file/(?P<file_attachment_diff_id>\d+)'
-        r'-(?P<file_attachment_id>\d+)/$',
-        views.ReviewFileAttachmentView.as_view(),
-        name='file-attachment'),
+        r'-(?P<file_attachment_id>\d+)/', include([
+            url('$', views.ReviewFileAttachmentView.as_view(),
+                name='file-attachment'),
+            dynamic_review_ui_urls,
+        ])),
 
     # Screenshots
     url(r'^s/(?P<screenshot_id>\d+)/$',
